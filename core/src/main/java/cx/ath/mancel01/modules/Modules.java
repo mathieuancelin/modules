@@ -135,7 +135,6 @@ public class Modules {
             ZipEntry conf = file.getEntry("META-INF/configuration.properties");
             if (conf == null) {
                 return getConfigurationFromNonModularJar(jar);
-                //throw new IllegalStateException("Jar doesn't contains configuration.properties");
             }
             Properties p = new Properties();
             p.load(file.getInputStream(conf));
@@ -183,7 +182,7 @@ public class Modules {
             };
             return configuration;
         } catch (Exception ex) {
-            throw new IllegalStateException("can't read metadata");
+            throw new IllegalStateException("Can't read module", ex);
         }
     }
 

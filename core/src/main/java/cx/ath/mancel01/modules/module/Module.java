@@ -19,14 +19,16 @@ import java.util.Set;
 public class Module {
 
     public static final String VERSION_SEPARATOR = ":";
+    
     public final String identifier;
     public final String name;
     public final String version;
-    private ModuleClassLoaderImpl moduleClassloader;
+
     private final Collection<String> dependencies;
     private final Modules delegateModules;
     private final Configuration configuration;
-    private ThreadLocal<List<String>> markedTL = new ThreadLocal<List<String>>();
+    
+    private ModuleClassLoaderImpl moduleClassloader;
 
     public Module(final Configuration configuration, Modules modules) {
         this.identifier = configuration.name() + VERSION_SEPARATOR + configuration.version();
@@ -36,7 +38,9 @@ public class Module {
         this.configuration = configuration;
         this.delegateModules = modules;
         if (configuration.rootResource() != null) {
-            this.moduleClassloader = new ModuleClassLoaderImpl(new URL[]{configuration.rootResource()}, this);
+            this.moduleClassloader = 
+                new ModuleClassLoaderImpl(
+                    new URL[]{configuration.rootResource()}, this);
         }
     }
 

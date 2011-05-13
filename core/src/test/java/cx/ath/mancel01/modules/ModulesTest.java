@@ -2,7 +2,7 @@ package cx.ath.mancel01.modules;
 
 import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.module.Module;
-import java.io.File;
+import cx.ath.mancel01.modules.util.URLUtils;
 import java.util.Collection;
 import java.util.Collections;
 import org.junit.Assert;
@@ -25,29 +25,10 @@ public class ModulesTest {
         Class.forName("cx.ath.mancel01.modules.module3.Logging");
     }
 
-    //@Test
-    public void testModulesCircular() throws Exception {
-        Configuration configuration12 =
-                Modules.getConfigurationFromJar(
-                new File("../module1-circular/target/module1-circular-1.0-SNAPSHOT.jar").toURI().toURL());
-        Configuration configuration11 =
-                Modules.getConfigurationFromJar(
-                new File("../module1/target/module1-1.0-SNAPSHOT.jar").toURI().toURL());
-        Configuration configuration2 = Modules.
-                getConfigurationFromJar(
-                new File("../module2/target/module2-1.0-SNAPSHOT.jar").toURI().toURL());
-        Configuration configuration3 = Modules.
-                getConfigurationFromJar(
-                new File("../module3/target/module3-1.0-SNAPSHOT.jar").toURI().toURL());
-        Modules modules = new Modules();
-        modules.addModules(configuration11, configuration12, configuration2, configuration3);
-        modules.startModule(Module.getIdentifier(configuration2.name(), configuration2.version()));
-    }
-
     @Test
     public void testModulesScanning() throws Exception {
         Collection<Configuration> configs =
-                Modules.scanForModules(new File("../").toURI().toURL());
+                Modules.scanForModules(URLUtils.url("../"));
         Modules modules = new Modules();
         modules.addModules(configs);
         modules.startModule("com.sample.module2:1.0");
@@ -56,71 +37,71 @@ public class ModulesTest {
     @Test
     public void testModules() throws Exception {
         Configuration configuration12 =
-                Modules.getConfigurationFromJar(
-                new File("../module1-v2/target/module1-2.0-SNAPSHOT.jar").toURI().toURL());
+            Modules.getConfigurationFromJar(
+                URLUtils.url("../module1-v2/target/module1-2.0-SNAPSHOT.jar"));
         Configuration configuration11 =
-                Modules.getConfigurationFromJar(
-                new File("../module1/target/module1-1.0-SNAPSHOT.jar").toURI().toURL());
+            Modules.getConfigurationFromJar(
+                URLUtils.url("../module1/target/module1-1.0-SNAPSHOT.jar"));
         Configuration configuration2 = Modules.
-                getConfigurationFromJar(
-                new File("../module2/target/module2-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module2/target/module2-1.0-SNAPSHOT.jar"));
         Configuration configuration3 = Modules.
-                getConfigurationFromJar(
-                new File("../module3/target/module3-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module3/target/module3-1.0-SNAPSHOT.jar"));
         Modules modules = new Modules();
         modules.addModule(configuration11);
         modules.addModule(configuration12);
         modules.addModule(configuration3);
         modules.addModule(configuration2);
-        modules.startModule(Module.getIdentifier(configuration2.name(), configuration2.version()));
+        modules.startModule(configuration2.identifier());
     }
 
     @Test
     public void testModules2() throws Exception {
         Configuration configuration12 =
-                Modules.getConfigurationFromJar(
-                new File("../module1-v2/target/module1-2.0-SNAPSHOT.jar").toURI().toURL());
+            Modules.getConfigurationFromJar(
+                URLUtils.url("../module1-v2/target/module1-2.0-SNAPSHOT.jar"));
         Configuration configuration11 =
-                Modules.getConfigurationFromJar(
-                new File("../module1/target/module1-1.0-SNAPSHOT.jar").toURI().toURL());
+            Modules.getConfigurationFromJar(
+                URLUtils.url("../module1/target/module1-1.0-SNAPSHOT.jar"));
         Configuration configuration2 = Modules.
-                getConfigurationFromJar(
-                new File("../module2/target/module2-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module2/target/module2-1.0-SNAPSHOT.jar"));
         Configuration configuration3 = Modules.
-                getConfigurationFromJar(
-                new File("../module3/target/module3-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module3/target/module3-1.0-SNAPSHOT.jar"));
         Modules modules = new Modules();
         modules.addModules(configuration11, configuration12, configuration2, configuration3);
-        modules.startModule(Module.getIdentifier(configuration2.name(), configuration2.version()));
+        modules.startModule(configuration2.identifier());
     }
 
     @Test(expected=RuntimeException.class)
     public void testModules3() throws Exception {
         Configuration configuration2 = Modules.
-                getConfigurationFromJar(
-                new File("../module2/target/module2-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module2/target/module2-1.0-SNAPSHOT.jar"));
         Configuration configuration3 = Modules.
-                getConfigurationFromJar(
-                new File("../module3/target/module3-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module3/target/module3-1.0-SNAPSHOT.jar"));
         Modules modules = new Modules();
         modules.addModules(configuration2, configuration3);
-        modules.startModule(Module.getIdentifier(configuration2.name(), configuration2.version()));
+        modules.startModule(configuration2.identifier());
     }
 
     @Test
     public void testResources() throws Exception {
         Configuration configuration12 =
-                Modules.getConfigurationFromJar(
-                new File("../module1-v2/target/module1-2.0-SNAPSHOT.jar").toURI().toURL());
+            Modules.getConfigurationFromJar(
+                URLUtils.url("../module1-v2/target/module1-2.0-SNAPSHOT.jar"));
         Configuration configuration11 =
-                Modules.getConfigurationFromJar(
-                new File("../module1/target/module1-1.0-SNAPSHOT.jar").toURI().toURL());
+            Modules.getConfigurationFromJar(
+                URLUtils.url("../module1/target/module1-1.0-SNAPSHOT.jar"));
         Configuration configuration2 = Modules.
-                getConfigurationFromJar(
-                new File("../module2/target/module2-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module2/target/module2-1.0-SNAPSHOT.jar"));
         Configuration configuration3 = Modules.
-                getConfigurationFromJar(
-                new File("../module3/target/module3-1.0-SNAPSHOT.jar").toURI().toURL());
+            getConfigurationFromJar(
+                URLUtils.url("../module3/target/module3-1.0-SNAPSHOT.jar"));
         Modules modules = new Modules();
         modules.addModules(configuration11, configuration12, configuration2, configuration3);
         Module module1 = modules.getModule(configuration11.identifier());
