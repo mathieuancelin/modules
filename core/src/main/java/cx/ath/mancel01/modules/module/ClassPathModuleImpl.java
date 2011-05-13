@@ -1,15 +1,12 @@
 package cx.ath.mancel01.modules.module;
 
 import cx.ath.mancel01.modules.api.Configuration;
+import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ClassPathModuleImpl extends Module {
-
-    private static final Logger logger = LoggerFactory.getLogger(ClassPathModuleImpl.class);
 
     public static final String IDENTIFIER = "Delegated-ClassPath-" + System.getProperty("java.specification.name");
 
@@ -95,7 +92,7 @@ public class ClassPathModuleImpl extends Module {
             if (clz != null) {
                 return clz;
             }
-            logger.debug("Loading {} from {}", name, module.identifier);
+            //Logger.trace("Loading {} from {}", name, module.identifier);
             return super.loadClass(name);
         }
     }

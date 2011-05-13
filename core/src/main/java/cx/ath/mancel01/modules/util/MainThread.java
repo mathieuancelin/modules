@@ -2,12 +2,8 @@ package cx.ath.mancel01.modules.util;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MainThread extends Thread {
-
-    private static final Logger logger = LoggerFactory.getLogger(MainThread.class);
 
     private final Method main;
 
@@ -23,7 +19,7 @@ public class MainThread extends Thread {
             Object arg = new String[] {};
             main.invoke(null, arg);
         } catch (Exception ex) {
-            logger.error("Error while running main method : ", ex);
+            SimpleModuleLogger.error("Error while running main method : ", ex);
         }
         ended.compareAndSet(false, true);
     }

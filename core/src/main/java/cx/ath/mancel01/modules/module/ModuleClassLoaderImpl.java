@@ -9,6 +9,7 @@ import java.net.URLClassLoader;
 import cx.ath.mancel01.modules.Modules;
 import cx.ath.mancel01.modules.api.ModuleClassLoader;
 import cx.ath.mancel01.modules.api.Resource;
+import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.io.File;
 
 import java.util.ArrayList;
@@ -19,12 +20,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClassLoader {
-
-    private static final Logger logger = LoggerFactory.getLogger(ModuleClassLoaderImpl.class);
 
     public static final List<String> bootDelegationList;
 
@@ -97,7 +94,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         for (String pack : bootDelegationList) {
             if (name.startsWith(pack)) {
-                logger.debug("Delegating {} to {}", name, Modules.CLASSPATH_MODULE.identifier);
+                //Logger.trace("Delegating {} to {}", name, Modules.CLASSPATH_MODULE.identifier);
                 return Modules.CLASSPATH_MODULE.load(name);
             }
         }
@@ -113,7 +110,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
                     if (!marked.contains(dep.identifier)) {
                         marked.add(dep.identifier);
                         if (dep.canLoad(name)) {
-                            logger.debug("Delegating {} to {}", name, dep.identifier);
+                            SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
                             return dep.load(name);
                         }
                     }
@@ -122,7 +119,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             throw new IllegalStateException("Missing dependency for class " + name + " from module " + module.identifier);
         } finally {
             if (!err) {
-                logger.debug("Loading {} from {}", name, module.identifier);
+                SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
             }
         }
     }

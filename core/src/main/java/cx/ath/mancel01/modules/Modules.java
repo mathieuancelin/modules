@@ -3,6 +3,7 @@ package cx.ath.mancel01.modules;
 import cx.ath.mancel01.modules.module.ClassPathModuleImpl;
 import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.module.Module;
+import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -10,24 +11,22 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Modules {
-
-    private static final Logger logger = LoggerFactory.getLogger(Modules.class);
 
     public static final ClassPathModuleImpl CLASSPATH_MODULE = new ClassPathModuleImpl();
 
     private Map<String, Module> modules = new HashMap<String, Module>();
 
     public Modules() {
-        logger.info("Creation of a new Java Modules Container !");
+        SimpleModuleLogger.info("Creation of a new Java Modules Container !");
     }
 
     public void addModule(final Configuration configuration) {
@@ -36,6 +35,10 @@ public class Modules {
         modules.put(configuration.name()
                 + Module.VERSION_SEPARATOR + configuration.version(),
                 module);
+    }
+
+    public void addModules(final Collection<Configuration> configurations) {
+        addModules(configurations.toArray(new Configuration[configurations.size()]));
     }
 
     public void addModules(final Configuration... configurations) {
@@ -88,6 +91,38 @@ public class Modules {
 
     public Map<String, Module> getModules() {
         return modules;
+    }
+
+    public static Collection<Configuration> scanForModules(final URL dir) {
+        Set<Configuration> modulesConfig = new HashSet<Configuration>();
+        File root = new File(dir.getFile());
+        Set<File> modules = new HashSet<File>();
+        scanChildren(root, modules);
+        for (File file : modules) {
+            try {
+                Configuration config = getConfigurationFromJar(file.toURI().toURL());
+                if (config != null) {
+                    modulesConfig.add(config);
+                }
+            } catch (Exception ex) {
+                SimpleModuleLogger.error("Ignore file {}", file.getAbsolutePath());
+            }
+        }
+        return modulesConfig;
+    }
+
+    private static void scanChildren(File root, Set<File> found) {
+        File[] children = root.listFiles();
+        if (children != null && children.length > 0) {
+            for (File file : children) {
+                if (file.getName().endsWith(".jar")) {
+                    found.add(file);
+                }
+                if (file.isDirectory()) {
+                    scanChildren(file, found);
+                }
+            }
+        }
     }
 
     public static Configuration getConfigurationFromJar(final URL jar) {

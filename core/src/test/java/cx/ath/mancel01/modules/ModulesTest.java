@@ -3,6 +3,7 @@ package cx.ath.mancel01.modules;
 import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.module.Module;
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,6 +42,15 @@ public class ModulesTest {
         Modules modules = new Modules();
         modules.addModules(configuration11, configuration12, configuration2, configuration3);
         modules.startModule(Module.getIdentifier(configuration2.name(), configuration2.version()));
+    }
+
+    @Test
+    public void testModulesScanning() throws Exception {
+        Collection<Configuration> configs =
+                Modules.scanForModules(new File("../").toURI().toURL());
+        Modules modules = new Modules();
+        modules.addModules(configs);
+        modules.startModule("com.sample.module2:1.0");
     }
 
     @Test

@@ -15,13 +15,10 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Module {
 
     public static final String VERSION_SEPARATOR = ":";
-    private static final Logger logger = LoggerFactory.getLogger(Module.class);
     public final String identifier;
     public final String name;
     public final String version;
