@@ -11,6 +11,10 @@ import org.junit.Test;
 
 public class ModulesTest {
 
+    static {
+        SimpleModuleLogger.enableTrace(true);
+    }
+
     @Test(expected=ClassNotFoundException.class)
     public void testNADependencies() throws Exception {
         Class.forName("cx.ath.mancel01.modules.module1.HelloUtils");

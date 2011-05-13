@@ -4,20 +4,24 @@ import java.io.PrintStream;
 
 public class SimpleModuleLogger {
 
-    public static final boolean trace = true;
+    private static boolean trace = false;
+
+    public static void enableTrace(boolean trace) {
+        SimpleModuleLogger.trace = trace;
+    }
 
     public static void error(String message, Object... printable) {
         print(System.err, message, printable);
     }
 
     public static void info(String message, Object... printable) {
-        if (trace) {
-            print(System.out, message, printable);
-        }
+        print(System.out, message, printable);
     }
 
     public static void trace(String message, Object... printable) {
-        print(System.out, "[TRACE] " + message, printable);
+        if (trace) {
+            print(System.out, "[TRACE] " + message, printable);
+        }
     }
 
     private static void print(PrintStream out, String message, Object... printable) {

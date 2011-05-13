@@ -11,7 +11,7 @@ public class ModulesRunner {
     public static void main(String... args) {
         if (args != null && args.length > 0) {
             int length = args.length;
-            if (length != 1 && length != 3) {
+            if (length != 1 && length != 2 && length != 3 && length != 4) {
                 usage();
                 System.exit(-1);
             } else {
@@ -20,7 +20,33 @@ public class ModulesRunner {
                 if (length == 1) {
                     run = args[0];
                 }
+                if (length == 2) {
+                    SimpleModuleLogger.enableTrace(true);
+                    if (!args[1].equals("-trace")) {
+                        usage();
+                        System.exit(-1);
+                    }
+                    run = args[0];
+                }
                 if (length == 3) {
+                    if (args[0].equals("-mp")) {
+                        path = args[1];
+                        run = args[2];
+                    } else {
+                        if (!args[1].equals("-mp")) {
+                            usage();
+                            System.exit(-1);
+                        }
+                        run = args[0];
+                        path = args[2];
+                    }
+                }
+                if (length == 4) {
+                    SimpleModuleLogger.enableTrace(true);
+                    if (!args[3].equals("-trace")) {
+                        usage();
+                        System.exit(-1);
+                    }
                     if (args[0].equals("-mp")) {
                         path = args[1];
                         run = args[2];
@@ -49,9 +75,14 @@ public class ModulesRunner {
     }
 
     public static void usage() {
-        System.out.println("Modules can be used like that :\n");
+        System.out.println("Java Modules version 1.0\n");
+        System.out.println("Modules can be used with the following commands :\n");
         System.out.println("java -jar modules.jar com.sample.module1:1.0");
+        System.out.println("java -jar modules.jar com.sample.module1:1.0 -trace");
         System.out.println("java -jar modules.jar com.sample.module1:1.0 -mp /tmp");
+        System.out.println("java -jar modules.jar com.sample.module1:1.0 -mp /tmp -trace");
         System.out.println("java -jar modules.jar -mp /tmp com.sample.module1:1.0");
+        System.out.println("java -jar modules.jar -mp /tmp com.sample.module1:1.0 -trace");
+        System.out.println("");
     }
 }
