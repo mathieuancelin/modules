@@ -27,7 +27,7 @@ public class SimpleModuleLogger {
             int i = 0;
             for (String part : parts) {
                 print.append(part);
-                if (i <= printable.length) {
+                if (i < printable.length) {
                     print.append(printable[i]);
                     i++;
                 }

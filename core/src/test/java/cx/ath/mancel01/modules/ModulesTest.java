@@ -2,6 +2,7 @@ package cx.ath.mancel01.modules;
 
 import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.module.Module;
+import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import cx.ath.mancel01.modules.util.URLUtils;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,19 @@ public class ModulesTest {
     public void testModulesScanning() throws Exception {
         Collection<Configuration> configs =
                 Modules.scanForModules(URLUtils.url("../"));
+        Modules modules = new Modules();
+        modules.addModules(configs);
+        modules.startModule("com.sample.module2:1.0");
+    }
+
+    @Test
+    public void testModulesM2Scanning() throws Exception {
+        SimpleModuleLogger.info("\nStart M2 scan ... \n");
+        long start = System.currentTimeMillis();
+        Collection<Configuration> configs =
+                Modules.scanForModules(URLUtils.url(System.getProperty("user.home") + "/.m2"));
+        SimpleModuleLogger.info("Finish M2 scan in {} ms. Found {} module(s).\n",
+                String.valueOf((System.currentTimeMillis() - start)), configs.size());
         Modules modules = new Modules();
         modules.addModules(configs);
         modules.startModule("com.sample.module2:1.0");
