@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 public class Module {
@@ -94,6 +95,10 @@ public class Module {
             throw new IllegalStateException("Missing dependencies for module "
                     + identifier + " :\n" + builder.toString());
         }
+    }
+
+    public <T> ServiceLoader<T> load(Class<T> clazz) {
+        return ServiceLoader.load(clazz, moduleClassloader);
     }
 
     Modules delegateModules() {
@@ -198,8 +203,20 @@ public class Module {
         return name + Module.VERSION_SEPARATOR + version;
     }
 
+    public static <T> ServiceLoader<T> load(Module module, Class<T> clazz) {
+        return module.load(clazz);
+    }
+
     public static Module getModule(Class<?> clazz) {
         ClassLoader loader = clazz.getClassLoader();
+        if (ModuleClassLoader.class.isAssignableFrom(loader.getClass())) {
+            ModuleClassLoader classLoader = (ModuleClassLoader) loader;
+            return classLoader.getModule();
+        }
+        return Modules.CLASSPATH_MODULE;
+    }
+
+    public static Module getModule(ClassLoader loader) {
         if (ModuleClassLoader.class.isAssignableFrom(loader.getClass())) {
             ModuleClassLoader classLoader = (ModuleClassLoader) loader;
             return classLoader.getModule();
