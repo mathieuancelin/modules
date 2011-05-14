@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -23,18 +24,23 @@ public class Modules {
 
     public static final ClassPathModuleImpl CLASSPATH_MODULE = new ClassPathModuleImpl();
 
+    // TODO : make it pluggable
+    private static final Map<String, Modules> availablePlatforms = new HashMap<String, Modules>();
+
     private Map<String, Module> modules = new HashMap<String, Module>();
+
+    private final String id;
 
     public Modules() {
         SimpleModuleLogger.info("Creation of a new Java Modules Container !");
+        this.id = UUID.randomUUID().toString(); // TODO : make it pluggable
+        availablePlatforms.put(id, this);
     }
 
     public void addModule(final Configuration configuration) {
         Module module = new Module(configuration, this);
         module.validate();
-        modules.put(configuration.name()
-                + Module.VERSION_SEPARATOR + configuration.version(),
-                module);
+        modules.put(module.identifier, module);
     }
 
     public void addModules(final Collection<Configuration> configurations) {
@@ -46,8 +52,7 @@ public class Modules {
         for (Configuration configuration : configurations) {
             Module module = new Module(configuration, this);
             newModules.add(module);
-            modules.put(configuration.name()
-                + Module.VERSION_SEPARATOR + configuration.version(), module);
+            modules.put(module.identifier, module);
         }
         try {
             for (Module module : newModules) {
@@ -91,6 +96,14 @@ public class Modules {
 
     public Map<String, Module> getModules() {
         return modules;
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public static Modules getModules(final String id) {
+        return availablePlatforms.get(id);
     }
 
     public static Collection<Configuration> scanForModules(final URL dir) {
@@ -277,5 +290,17 @@ public class Modules {
                 return jar;
             }
         };
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("\nModules container " + id + "\n");
+        b.append("Available modules : \n\n");
+        for (Module m : modules.values()) {
+            b.append(m.identifier);
+            b.append("\n");
+        }
+        return b.toString();
     }
 }
