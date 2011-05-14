@@ -71,6 +71,9 @@ public class ModulesRunner {
                 modules.addModules(configs);
                 modules.startModule(run);
             }
+        } else {
+            usage();
+            System.exit(-1);
         }
     }
 
