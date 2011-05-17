@@ -31,6 +31,8 @@ public class Module {
     private final Collection<Dependency> dependencies;
     private final Modules delegateModules;
     private final Configuration configuration;
+
+    final Set<String> areCircular;
     
     private ModuleClassLoaderImpl moduleClassloader;
 
@@ -42,6 +44,7 @@ public class Module {
                 .getDependencies(configuration.dependencies());
         this.configuration = configuration;
         this.delegateModules = modules;
+        this.areCircular = new HashSet<String>();
         if (configuration.rootResource() != null) {
             this.moduleClassloader = 
                 new ModuleClassLoaderImpl(
@@ -87,7 +90,7 @@ public class Module {
         List<String> missing = new ArrayList<String>();
         for (Dependency dependency : dependencies) {
             if (!delegateModules.getModules().containsKey(dependency.identifier())) {
-                missing.add("Missing dependency : " + dependency);
+                missing.add("Missing dependency : " + dependency.identifier());
             }
         }
         if (!missing.isEmpty()) {
@@ -101,7 +104,7 @@ public class Module {
         }
         List<String> marked = new ArrayList<String>();
         DependencyImpl
-                .checkForCircularDependencies(marked, this, delegateModules);
+                .checkForCircularDependencies(marked, this, delegateModules, areCircular);
     }
 
     public <T> ServiceLoader<T> load(Class<T> clazz) {

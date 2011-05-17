@@ -26,6 +26,8 @@ import java.util.zip.ZipFile;
 
 public class Modules {
 
+    public static final boolean failOnCircularRefs = false;
+
     public static final ClassPathModuleImpl CLASSPATH_MODULE = new ClassPathModuleImpl();
 
     // TODO : make it pluggable

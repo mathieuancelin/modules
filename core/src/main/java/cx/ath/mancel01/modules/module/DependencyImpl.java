@@ -6,6 +6,7 @@ import cx.ath.mancel01.modules.exception.CircularDependencyException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public class DependencyImpl implements Dependency {
 
@@ -50,18 +51,42 @@ public class DependencyImpl implements Dependency {
         return deps;
     }
 
-    static void checkForCircularDependencies(List<String> marked, Module m, Modules modules) {
+    static void checkForCircularDependencies(List<String> marked, Module m, Modules modules, Set<String> areCircular) {
         if (marked.contains(m.identifier)) {
-            // TODO : show refs chain
-            throw new CircularDependencyException("Circular reference for module " + m.identifier);
-        }
-        marked.add(m.identifier);
-        for (Dependency dependency : m.dependencies()) {
-            Module child = modules.getModules().get(dependency.identifier());
-            if (child != null) {
-                checkForCircularDependencies(marked, child, modules);
+            if ( Modules.failOnCircularRefs ) {
+                StringBuilder builder = new StringBuilder();
+                builder.append(m.identifier);
+                builder.append(" => ");
+                boolean back = true;
+                int i = (marked.size() - 1);
+                while (back) {
+                    try {
+                        String dep = marked.get(i);
+                        if (dep.equals(m.identifier)) {
+                            back = false;
+                        }
+                        builder.append(dep);
+                        if (back != false) {
+                            builder.append(" => ");
+                        }
+                        i--;
+                    } catch (Exception e) {
+                        back = false;
+                    }
+                }
+                throw new CircularDependencyException("Circular reference for module "
+                        + m.identifier + " :\n    Circular refs chain : " + builder.toString() + "\n");
             }
+            areCircular.add(m.identifier);
+        } else {
+            marked.add(m.identifier);
+            for (Dependency dependency : m.dependencies()) {
+                Module child = modules.getModules().get(dependency.identifier());
+                if (child != null) {
+                    checkForCircularDependencies(marked, child, modules, areCircular);
+                }
+            }
+            marked.remove(m.identifier);
         }
-        marked.remove(m.identifier);
     }
 }

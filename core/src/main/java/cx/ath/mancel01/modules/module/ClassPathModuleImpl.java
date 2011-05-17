@@ -11,53 +11,11 @@ import java.util.Collections;
 public class ClassPathModuleImpl extends Module {
 
     public static final String IDENTIFIER = "Delegated-ClassPath-" + System.getProperty("java.specification.name").replace(" ", "-");
-
     private final ClassLoader loader;
 
     public ClassPathModuleImpl() {
-        super(new Configuration() {
-
-            @Override
-            public String name() {
-                return IDENTIFIER;
-            }
-
-            @Override
-            public Collection<String> dependencies() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public Collection<String> optionalDependencies() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public boolean startable() {
-                return false;
-            }
-
-            @Override
-            public String mainClass() {
-                return null;
-            }
-
-            @Override
-            public URL rootResource() {
-                return null;
-            }
-
-            @Override
-            public String version() {
-                return System.getProperty("java.specification.version");
-            }
-
-            @Override
-            public String identifier() {
-                return name() + Module.VERSION_SEPARATOR + version();
-            }
-        }, null);
-        loader =  new CPClassLoader(getClass().getClassLoader(), this);
+        super(new ClassLoaderConfiguration(), null);
+        loader = new CPClassLoader(getClass().getClassLoader(), this);
     }
 
     @Override
@@ -91,7 +49,6 @@ public class ClassPathModuleImpl extends Module {
                 throw new RuntimeException("Can't find method 'findLoadedClass'");
             }
         }
-        
         private Module module;
 
         public CPClassLoader(ClassLoader parent, Module module) {
@@ -110,9 +67,53 @@ public class ClassPathModuleImpl extends Module {
                 if (clz != null) {
                     return clz;
                 }
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+            }
             SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
             return getParent().loadClass(name);
+        }
+    }
+
+    private static class ClassLoaderConfiguration implements Configuration {
+
+        @Override
+        public String name() {
+            return IDENTIFIER;
+        }
+
+        @Override
+        public Collection<String> dependencies() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public Collection<String> optionalDependencies() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public boolean startable() {
+            return false;
+        }
+
+        @Override
+        public String mainClass() {
+            return null;
+        }
+
+        @Override
+        public URL rootResource() {
+            return null;
+        }
+
+        @Override
+        public String version() {
+            return System.getProperty("java.specification.version");
+        }
+
+        @Override
+        public String identifier() {
+            return name() + Module.VERSION_SEPARATOR + version();
         }
     }
 }

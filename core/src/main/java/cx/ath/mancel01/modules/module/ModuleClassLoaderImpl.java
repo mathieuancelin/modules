@@ -16,7 +16,6 @@ import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.io.File;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -106,16 +105,12 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             return super.loadClass(name);
         } catch (Throwable t) {
             err = true;
-            List<String> marked = Collections.synchronizedList(new ArrayList<String>());
             for (Dependency dependency : module.dependencies()) {
-                if (module.delegateModules().getModules().containsKey(dependency.identifier())) {
-                    Module dep = module.delegateModules().getModules().get(dependency.identifier());
-                    if (!marked.contains(dep.identifier)) {
-                        marked.add(dep.identifier);
-                        if (dep.canLoad(name)) {
-                            SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
-                            return dep.load(name);
-                        }
+            if (module.delegateModules().getModules().containsKey(dependency.identifier())) {
+                Module dep = module.delegateModules().getModules().get(dependency.identifier());
+                    if (dep.canLoad(name)) {
+                        SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
+                        return dep.load(name);
                     }
                 }
             }
