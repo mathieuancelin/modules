@@ -4,77 +4,62 @@ import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import cx.ath.mancel01.modules.util.URLUtils;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class ModulesRunner {
 
     public static final String TRACE = "-trace";
+
+    public static final String COLORS = "-colors";
     
     public static final String MODULES_PATH = "-mp";
 
     public static void main(String... args) {
         if (args != null && args.length > 0) {
-            int length = args.length;
-            if (length != 1 && length != 2 && length != 3 && length != 4) {
+            List<String> argList = new ArrayList<String>();
+            for (String arg : args) {
+                argList.add(arg);
+            }
+            String path = ".";
+            String run = null;
+            if (argList.contains(TRACE)) {
+                SimpleModuleLogger.enableTrace(true);
+                argList.remove(TRACE);
+            }
+            if (argList.contains(COLORS)) {
+                SimpleModuleLogger.enableColors(true);
+                argList.remove(COLORS);
+            }
+            if (argList.contains(MODULES_PATH)) {
+                int index = argList.indexOf(MODULES_PATH);
+                try {
+                    path = argList.get(index + 1);
+                    argList.remove(path);
+                    argList.remove(MODULES_PATH);
+                } catch (Exception e) {
+                    usage();
+                    System.exit(-1);
+                }
+            }
+            if (argList.isEmpty()) {
                 usage();
                 System.exit(-1);
             } else {
-                String path = ".";
-                String run = null;
-                if (length == 1) {
-                    run = args[0];
-                }
-                if (length == 2) {
-                    SimpleModuleLogger.enableTrace(true);
-                    if (!args[1].equals(TRACE)) {
-                        usage();
-                        System.exit(-1);
-                    }
-                    run = args[0];
-                }
-                if (length == 3) {
-                    if (args[0].equals(MODULES_PATH)) {
-                        path = args[1];
-                        run = args[2];
-                    } else {
-                        if (!args[1].equals(MODULES_PATH)) {
-                            usage();
-                            System.exit(-1);
-                        }
-                        run = args[0];
-                        path = args[2];
-                    }
-                }
-                if (length == 4) {
-                    SimpleModuleLogger.enableTrace(true);
-                    if (!args[3].equals(TRACE)) {
-                        usage();
-                        System.exit(-1);
-                    }
-                    if (args[0].equals(MODULES_PATH)) {
-                        path = args[1];
-                        run = args[2];
-                    } else {
-                        if (!args[1].equals(MODULES_PATH)) {
-                            usage();
-                            System.exit(-1);
-                        }
-                        run = args[0];
-                        path = args[2];
-                    }
-                }
-                File root = new File(path);
-                SimpleModuleLogger.info("\nScanning {} ...", root.getAbsolutePath());
-                long start = System.currentTimeMillis();
-                Collection<Configuration> configs =
-                        Modules.scanForModules(URLUtils.url(path));
-                SimpleModuleLogger.info("Found {} module(s) in {} ms\n",
-                        configs.size(),
-                        String.valueOf((System.currentTimeMillis() - start)));
-                Modules modules = new Modules();
-                modules.addModules(configs);
-                modules.startModule(run);
+                run = argList.get(0);
             }
+            File root = new File(path);
+            SimpleModuleLogger.info("\nScanning {} ...", root.getAbsolutePath());
+            long start = System.currentTimeMillis();
+            Collection<Configuration> configs =
+                    Modules.scanForModules(URLUtils.url(path));
+            SimpleModuleLogger.info("Found {} module(s) in {} ms\n",
+                    configs.size(),
+                    String.valueOf((System.currentTimeMillis() - start)));
+            Modules modules = new Modules();
+            modules.addModules(configs);
+            modules.startModule(run);
         } else {
             usage();
             System.exit(-1);
