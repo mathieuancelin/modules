@@ -101,7 +101,13 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             }
         }
         boolean err = false;
+        boolean already = false;
         try {
+            Class<?> clazz = findLoadedClass(name);
+            if (clazz != null) {
+                already = true;
+                return clazz;
+            }
             return super.loadClass(name);
         } catch (Throwable t) {
             err = true;
@@ -117,7 +123,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             throw new MissingDependenciesException("Missing dependency for class "
                     + name + " from module " + module.identifier);
         } finally {
-            if (!err) {
+            if (!err && !already) {
                 SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
             }
         }
