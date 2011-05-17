@@ -53,6 +53,7 @@ public class Module {
 
     public void start() {
         if (configuration.startable()) {
+            ClassLoader old = Thread.currentThread().getContextClassLoader();
             try {
                 final Class<?> main = load(configuration.mainClass());
                 Method mainMethod = main.getMethod("main", String[].class);
@@ -61,9 +62,12 @@ public class Module {
                     throw new NoSuchMethodException("Main method is not static for " + this);
                 }
                 Object arg = new String[] {};
+                Thread.currentThread().setContextClassLoader(moduleClassloader);
                 mainMethod.invoke(null, arg);
             } catch (Exception ex) {
                 throw new ModuleStartupException(ex);
+            } finally {
+                Thread.currentThread().setContextClassLoader(old);
             }
         }
     }
