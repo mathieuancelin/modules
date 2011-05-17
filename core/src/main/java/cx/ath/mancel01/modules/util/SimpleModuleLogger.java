@@ -4,6 +4,8 @@ import java.io.PrintStream;
 
 public class SimpleModuleLogger {
 
+    private static final String TRACE_PREFIX = "[TRACE] ";
+
     private static boolean trace = false;
 
     public static void enableTrace(boolean trace) {
@@ -20,7 +22,7 @@ public class SimpleModuleLogger {
 
     public static void trace(String message, Object... printable) {
         if (trace) {
-            print(System.out, "[TRACE] " + message, printable);
+            print(System.out, TRACE_PREFIX + message, printable);
         }
     }
 
