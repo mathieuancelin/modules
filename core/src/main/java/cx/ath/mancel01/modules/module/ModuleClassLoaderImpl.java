@@ -7,8 +7,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import cx.ath.mancel01.modules.Modules;
+import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.api.ModuleClassLoader;
 import cx.ath.mancel01.modules.api.Resource;
+import cx.ath.mancel01.modules.exception.MissingDependenciesException;
+import cx.ath.mancel01.modules.exception.ModuleClassloaderCreationException;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.io.File;
 
@@ -86,7 +89,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
                 }
             }
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new ModuleClassloaderCreationException(ex);
         }
     }
 
@@ -94,7 +97,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         for (String pack : bootDelegationList) {
             if (name.startsWith(pack)) {
-                //Logger.trace("Delegating {} to {}", name, Modules.CLASSPATH_MODULE.identifier);
+                SimpleModuleLogger.trace("Delegating {} to {}", name, Modules.CLASSPATH_MODULE.identifier);
                 return Modules.CLASSPATH_MODULE.load(name);
             }
         }
@@ -104,9 +107,9 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         } catch (Throwable t) {
             err = true;
             List<String> marked = Collections.synchronizedList(new ArrayList<String>());
-            for (String dependency : module.dependencies()) {
-                if (module.delegateModules().getModules().containsKey(dependency)) {
-                    Module dep = module.delegateModules().getModules().get(dependency);
+            for (Dependency dependency : module.dependencies()) {
+                if (module.delegateModules().getModules().containsKey(dependency.identifier())) {
+                    Module dep = module.delegateModules().getModules().get(dependency.identifier());
                     if (!marked.contains(dep.identifier)) {
                         marked.add(dep.identifier);
                         if (dep.canLoad(name)) {
@@ -116,7 +119,8 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
                     }
                 }
             }
-            throw new IllegalStateException("Missing dependency for class " + name + " from module " + module.identifier);
+            throw new MissingDependenciesException("Missing dependency for class "
+                    + name + " from module " + module.identifier);
         } finally {
             if (!err) {
                 SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
@@ -191,10 +195,10 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     }
 
     private void computeDependenciesLoadable(Set<String> visited) {
-        for (String dep : module.dependencies()) {
-            Module m = module.delegateModules().getModule(dep);
-            if (!visited.contains(dep)) {
-                visited.add(dep);
+        for (Dependency dep : module.dependencies()) {
+            Module m = module.delegateModules().getModule(dep.identifier());
+            if (!visited.contains(dep.identifier())) {
+                visited.add(dep.identifier());
                 dependenciesManagedClasses.addAll(m.getAllLoadableClasses(visited));
             }
         }

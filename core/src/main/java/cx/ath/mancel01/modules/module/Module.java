@@ -2,7 +2,10 @@ package cx.ath.mancel01.modules.module;
 
 import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.Modules;
+import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.api.ModuleClassLoader;
+import cx.ath.mancel01.modules.exception.MissingDependenciesException;
+import cx.ath.mancel01.modules.exception.ModuleStartupException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -25,7 +28,7 @@ public class Module {
     public final String name;
     public final String version;
 
-    private final Collection<String> dependencies;
+    private final Collection<Dependency> dependencies;
     private final Modules delegateModules;
     private final Configuration configuration;
     
@@ -35,7 +38,8 @@ public class Module {
         this.identifier = configuration.name() + VERSION_SEPARATOR + configuration.version();
         this.name = configuration.name();
         this.version = configuration.version();
-        this.dependencies = configuration.dependencies();
+        this.dependencies = DependencyImpl
+                .getDependencies(configuration.dependencies());
         this.configuration = configuration;
         this.delegateModules = modules;
         if (configuration.rootResource() != null) {
@@ -57,7 +61,7 @@ public class Module {
                 Object arg = new String[] {};
                 mainMethod.invoke(null, arg);
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                throw new ModuleStartupException(ex);
             }
         }
     }
@@ -66,7 +70,7 @@ public class Module {
         try {
             return moduleClassloader.loadClass(name);
         } catch (ClassNotFoundException ex) {
-            throw new IllegalStateException("Missing dependency for class "
+            throw new MissingDependenciesException("Missing dependency for class "
                     + name + "from module " + identifier);
         }
     }
@@ -75,14 +79,14 @@ public class Module {
         return moduleClassloader.canLoad(name);
     }
 
-    public Collection<String> dependencies() {
+    public Collection<Dependency> dependencies() {
         return dependencies;
     }
 
     public void validate() {
         List<String> missing = new ArrayList<String>();
-        for (String dependency : dependencies) {
-            if (!delegateModules.getModules().containsKey(dependency)) {
+        for (Dependency dependency : dependencies) {
+            if (!delegateModules.getModules().containsKey(dependency.identifier())) {
                 missing.add("Missing dependency : " + dependency);
             }
         }
@@ -92,9 +96,12 @@ public class Module {
                 builder.append(miss);
                 builder.append("\n");
             }
-            throw new IllegalStateException("Missing dependencies for module "
+            throw new MissingDependenciesException("Missing dependencies for module "
                     + identifier + " :\n" + builder.toString());
         }
+        List<String> marked = new ArrayList<String>();
+        DependencyImpl
+                .checkForCircularDependencies(marked, this, delegateModules);
     }
 
     public <T> ServiceLoader<T> load(Class<T> clazz) {

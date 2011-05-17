@@ -2,14 +2,18 @@ package cx.ath.mancel01.modules;
 
 import cx.ath.mancel01.modules.module.ClassPathModuleImpl;
 import cx.ath.mancel01.modules.api.Configuration;
+import cx.ath.mancel01.modules.exception.AddModuleException;
+import cx.ath.mancel01.modules.exception.ModuleNotFoundException;
+import cx.ath.mancel01.modules.exception.ModuleNotReadableException;
 import cx.ath.mancel01.modules.module.Module;
+import cx.ath.mancel01.modules.util.Configurations.ComplexConfigurationFromNonModularJar;
+import cx.ath.mancel01.modules.util.Configurations.SimpleConfigurationFromNonModularJar;
+import cx.ath.mancel01.modules.util.Configurations.StandardModuleConfiguration;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -62,7 +66,7 @@ public class Modules {
             for (Module module : newModules) {
                 modules.remove(module.identifier);
             }
-            throw new RuntimeException(ex);
+            throw new AddModuleException(ex);
         }
     }
 
@@ -70,7 +74,7 @@ public class Modules {
         if (modules.containsKey(identifier)) {
             modules.remove(identifier);
         } else {
-            throw new IllegalStateException("Module " + identifier + " not found");
+            throw new ModuleNotFoundException("Module " + identifier + " not found");
         }
     }
 
@@ -78,7 +82,7 @@ public class Modules {
         if (modules.containsKey(identifier)) {
             return modules.get(identifier);
         } else {
-            throw new IllegalStateException("Module " + identifier + " not found");
+            throw new ModuleNotFoundException("Module " + identifier + " not found");
         }
     }
 
@@ -90,7 +94,7 @@ public class Modules {
         if (modules.containsKey(identifier)) {
             modules.get(identifier).start();
         } else {
-            throw new IllegalStateException("Module " + identifier + " not found");
+            throw new ModuleNotFoundException("Module " + identifier + " not found");
         }
     }
 
@@ -155,147 +159,29 @@ public class Modules {
             final String version = p.getProperty("version");
             final String mainClass = p.getProperty("main");
             final String dependencies = p.getProperty("dependencies");
-            Configuration configuration = new Configuration() {
-                @Override
-                public String name() { return name; }
-                @Override
-                public Collection<String> dependencies() {
-                    if (dependencies == null) {
-                        return Collections.emptyList();
-                    }
-                    return Arrays.asList(dependencies.split(";"));
-                }
-                @Override
-                public Collection<String> optionalDependencies() {
-                    return Collections.emptyList();
-                }
-                @Override
-                public boolean startable() {
-                    return (mainClass != null);
-                }
-                @Override
-                public String mainClass() {
-                    return mainClass;
-                }
-                @Override
-                public URL rootResource() { return jar; }
-
-                @Override
-                public String version() {
-                    if (version == null) {
-                        return "1.0";
-                    }
-                    return version;
-                }
-
-                @Override
-                public String identifier() {
-                    return name() + Module.VERSION_SEPARATOR + version();
-                }
-            };
+            Configuration configuration = 
+                    new StandardModuleConfiguration(
+                        name, version, mainClass, dependencies, jar);
+            file.close();
             return configuration;
         } catch (Exception ex) {
-            throw new IllegalStateException("Can't read module", ex);
+            throw new ModuleNotReadableException("Can't read module", ex);
         }
     }
 
     private static Configuration getConfigurationFromNonModularJar(final URL jar) {
-        return new Configuration() {
-
-            private final String name = new File(jar.getFile()).getName();
-
-            @Override
-            public String name() {
-                return name;
-            }
-
-            @Override
-            public String version() {
-                return "";
-            }
-
-            @Override
-            public String identifier() {
-                return name;
-            }
-
-            @Override
-            public Collection<String> dependencies() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public Collection<String> optionalDependencies() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public boolean startable() {
-                return false;
-            }
-
-            @Override
-            public String mainClass() {
-                return null;
-            }
-
-            @Override
-            public URL rootResource() {
-                return jar;
-            }
-        };
+        return new SimpleConfigurationFromNonModularJar(jar);
     }
 
     public static Configuration getConfigurationFromNonModularJar(final URL jar,
             final String name, final String version) {
-        return new Configuration() {
-
-            @Override
-            public String name() {
-                return name;
-            }
-
-            @Override
-            public String version() {
-                return version;
-            }
-
-            @Override
-            public String identifier() {
-                return name + Module.VERSION_SEPARATOR + version;
-            }
-
-            @Override
-            public Collection<String> dependencies() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public Collection<String> optionalDependencies() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public boolean startable() {
-                return false;
-            }
-
-            @Override
-            public String mainClass() {
-                return null;
-            }
-
-            @Override
-            public URL rootResource() {
-                return jar;
-            }
-        };
+        return new ComplexConfigurationFromNonModularJar(jar, version, name);
     }
 
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        b.append("\nModules container " + id + "\n");
+        b.append("\nModules container ").append(id).append("\n");
         b.append("Available modules : \n\n");
         for (Module m : modules.values()) {
             b.append(m.identifier);

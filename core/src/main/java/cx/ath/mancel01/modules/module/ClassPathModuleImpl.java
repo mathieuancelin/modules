@@ -1,14 +1,16 @@
 package cx.ath.mancel01.modules.module;
 
 import cx.ath.mancel01.modules.api.Configuration;
+import cx.ath.mancel01.modules.exception.MissingDependenciesException;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 
 public class ClassPathModuleImpl extends Module {
 
-    public static final String IDENTIFIER = "Delegated-ClassPath-" + System.getProperty("java.specification.name");
+    public static final String IDENTIFIER = "Delegated-ClassPath-" + System.getProperty("java.specification.name").replace(" ", "-");
 
     private final ClassLoader loader;
 
@@ -66,10 +68,9 @@ public class ClassPathModuleImpl extends Module {
     @Override
     public Class<?> load(String name) {
         try {
-            
             return loader.loadClass(name);
         } catch (ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
+            throw new MissingDependenciesException(ex);
         }
     }
 
@@ -79,6 +80,18 @@ public class ClassPathModuleImpl extends Module {
 
     private static class CPClassLoader extends ClassLoader {
 
+        private static Method findLoadedClass;
+
+        static {
+            try {
+                findLoadedClass = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+            } catch (NoSuchMethodException ex) {
+                throw new RuntimeException("Can't find method 'findLoadedClass'");
+            } catch (SecurityException ex) {
+                throw new RuntimeException("Can't find method 'findLoadedClass'");
+            }
+        }
+        
         private Module module;
 
         public CPClassLoader(ClassLoader parent, Module module) {
@@ -88,12 +101,18 @@ public class ClassPathModuleImpl extends Module {
 
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
-            Class<?> clz = super.findLoadedClass(name);
-            if (clz != null) {
-                return clz;
-            }
-            //Logger.trace("Loading {} from {}", name, module.identifier);
-            return super.loadClass(name);
+            try {
+                Object[] args = new Object[1];
+                args[0] = name;
+                findLoadedClass.setAccessible(true);
+                Class<?> clz = (Class<?>) findLoadedClass.invoke(getParent(), args);
+                findLoadedClass.setAccessible(false);
+                if (clz != null) {
+                    return clz;
+                }
+            } catch (Exception ex) {}
+            SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
+            return getParent().loadClass(name);
         }
     }
 }
