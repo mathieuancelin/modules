@@ -11,7 +11,12 @@ import java.util.Collections;
 
 public class ClassPathModuleImpl extends Module {
 
-    public static final String IDENTIFIER = "Delegated-ClassPath-" + System.getProperty("java.specification.name").replace(" ", "-");
+    public static final String IDENTIFIER = "Delegated-ClassPath-"
+            + System.getProperty("java.specification.name").replace(" ", "-");
+
+    private static final String JAVA_VERSION = 
+            System.getProperty("java.specification.version").replace(" ", "-");
+
     private final ClassLoader loader;
 
     public ClassPathModuleImpl() {
@@ -107,7 +112,7 @@ public class ClassPathModuleImpl extends Module {
 
         @Override
         public String version() {
-            return System.getProperty("java.specification.version");
+            return JAVA_VERSION;
         }
 
         @Override

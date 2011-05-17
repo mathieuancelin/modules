@@ -23,6 +23,8 @@ import java.util.Set;
 public class Module {
 
     public static final String VERSION_SEPARATOR = ":";
+
+    private static final String MAIN_METHOD = "main";
     
     public final String identifier;
     public final String name;
@@ -56,7 +58,7 @@ public class Module {
             ClassLoader old = Thread.currentThread().getContextClassLoader();
             try {
                 final Class<?> main = load(configuration.mainClass());
-                Method mainMethod = main.getMethod("main", String[].class);
+                Method mainMethod = main.getMethod(MAIN_METHOD, String[].class);
                 final int modifiers = mainMethod.getModifiers();
                 if (!Modifier.isStatic(modifiers)) {
                     throw new NoSuchMethodException("Main method is not static for " + this);
@@ -107,7 +109,8 @@ public class Module {
         }
         List<String> marked = new ArrayList<String>();
         DependencyImpl
-                .checkForCircularDependencies(marked, this, delegateModules, areCircular);
+            .checkForCircularDependencies(
+                marked, this, delegateModules, areCircular);
     }
 
     public <T> ServiceLoader<T> load(Class<T> clazz) {
@@ -131,7 +134,8 @@ public class Module {
             return false;
         }
         final Module other = (Module) obj;
-        if ((this.identifier == null) ? (other.identifier != null) : !this.identifier.equals(other.identifier)) {
+        if ((this.identifier == null) ? (other.identifier != null)
+                : !this.identifier.equals(other.identifier)) {
             return false;
         }
         return true;

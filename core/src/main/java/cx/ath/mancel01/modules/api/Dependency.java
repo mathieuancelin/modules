@@ -7,5 +7,4 @@ public interface Dependency {
     String version();
 
     String identifier();
-
 }

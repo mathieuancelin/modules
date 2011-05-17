@@ -27,6 +27,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Modules {
+    public static final String MODULE_CONFIG_NAME = "name";
+    public static final String MODULE_CONFIG_VERSION = "version";
+    public static final String MODULE_CONFIG_MAIN = "main";
+    public static final String MODULE_CONFIG_DEPENDENCIES = "dependencies";
 
     public static final ClassPathModuleImpl CLASSPATH_MODULE = new ClassPathModuleImpl();
 
@@ -159,10 +163,10 @@ public class Modules {
             }
             Properties p = new Properties();
             p.load(file.getInputStream(conf));
-            final String name = p.getProperty("name");
-            final String version = p.getProperty("version");
-            final String mainClass = p.getProperty("main");
-            final String dependencies = p.getProperty("dependencies");
+            final String name = p.getProperty(MODULE_CONFIG_NAME);
+            final String version = p.getProperty(MODULE_CONFIG_VERSION);
+            final String mainClass = p.getProperty(MODULE_CONFIG_MAIN);
+            final String dependencies = p.getProperty(MODULE_CONFIG_DEPENDENCIES);
             Configuration configuration = 
                     new StandardModuleConfiguration(
                         name, version, mainClass, dependencies, jar);

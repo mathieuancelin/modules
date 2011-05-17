@@ -8,6 +8,10 @@ import java.util.Collection;
 
 public class ModulesRunner {
 
+    public static final String TRACE = "-trace";
+    
+    public static final String MODULES_PATH = "-mp";
+
     public static void main(String... args) {
         if (args != null && args.length > 0) {
             int length = args.length;
@@ -22,18 +26,18 @@ public class ModulesRunner {
                 }
                 if (length == 2) {
                     SimpleModuleLogger.enableTrace(true);
-                    if (!args[1].equals("-trace")) {
+                    if (!args[1].equals(TRACE)) {
                         usage();
                         System.exit(-1);
                     }
                     run = args[0];
                 }
                 if (length == 3) {
-                    if (args[0].equals("-mp")) {
+                    if (args[0].equals(MODULES_PATH)) {
                         path = args[1];
                         run = args[2];
                     } else {
-                        if (!args[1].equals("-mp")) {
+                        if (!args[1].equals(MODULES_PATH)) {
                             usage();
                             System.exit(-1);
                         }
@@ -43,15 +47,15 @@ public class ModulesRunner {
                 }
                 if (length == 4) {
                     SimpleModuleLogger.enableTrace(true);
-                    if (!args[3].equals("-trace")) {
+                    if (!args[3].equals(TRACE)) {
                         usage();
                         System.exit(-1);
                     }
-                    if (args[0].equals("-mp")) {
+                    if (args[0].equals(MODULES_PATH)) {
                         path = args[1];
                         run = args[2];
                     } else {
-                        if (!args[1].equals("-mp")) {
+                        if (!args[1].equals(MODULES_PATH)) {
                             usage();
                             System.exit(-1);
                         }
@@ -78,14 +82,14 @@ public class ModulesRunner {
     }
 
     public static void usage() {
-        System.out.println("Java Modules version 1.0\n");
-        System.out.println("Modules can be used with the following commands :\n");
-        System.out.println("java -jar modules.jar com.sample.module1:1.0");
-        System.out.println("java -jar modules.jar com.sample.module1:1.0 -trace");
-        System.out.println("java -jar modules.jar com.sample.module1:1.0 -mp /tmp");
-        System.out.println("java -jar modules.jar com.sample.module1:1.0 -mp /tmp -trace");
-        System.out.println("java -jar modules.jar -mp /tmp com.sample.module1:1.0");
-        System.out.println("java -jar modules.jar -mp /tmp com.sample.module1:1.0 -trace");
-        System.out.println("");
+        SimpleModuleLogger.info("Java Modules version 1.0\n");
+        SimpleModuleLogger.info("Modules can be used with the following commands :\n");
+        SimpleModuleLogger.info("java -jar modules.jar com.sample.module1:1.0");
+        SimpleModuleLogger.info("java -jar modules.jar com.sample.module1:1.0 {}", TRACE);
+        SimpleModuleLogger.info("java -jar modules.jar com.sample.module1:1.0 {} /tmp", MODULES_PATH);
+        SimpleModuleLogger.info("java -jar modules.jar com.sample.module1:1.0 {} /tmp {}", MODULES_PATH, TRACE);
+        SimpleModuleLogger.info("java -jar modules.jar {} /tmp com.sample.module1:1.0", MODULES_PATH);
+        SimpleModuleLogger.info("java -jar modules.jar {} /tmp com.sample.module1:1.0 {}", MODULES_PATH, TRACE);
+        SimpleModuleLogger.info("");
     }
 }

@@ -26,7 +26,7 @@ public class DependencyImpl implements Dependency {
 
     private DependencyImpl(String identifier) {
         this.identifier = identifier;
-        String tmpName = "";
+        String tmpName = identifier;
         String tmpVersion = "";
         try {
             tmpName = identifier.split(":")[0];

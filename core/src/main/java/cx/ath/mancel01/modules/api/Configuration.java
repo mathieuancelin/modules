@@ -18,5 +18,4 @@ public interface Configuration {
     String mainClass();
 
     URL rootResource();
-
 }

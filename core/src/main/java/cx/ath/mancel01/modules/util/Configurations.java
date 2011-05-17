@@ -12,6 +12,8 @@ import java.util.Collections;
 
 public class Configurations {
 
+    public static final String DEPENDENCY_SEPARATOR = ";";
+
     public static class StandardModuleConfiguration implements Configuration {
 
         private final String name;
@@ -39,7 +41,8 @@ public class Configurations {
             if (dependencies == null) {
                 return Collections.emptyList();
             }
-            return DependencyImpl.getDependencies(Arrays.asList(dependencies.split(";")));
+            return DependencyImpl.getDependencies(
+                    Arrays.asList(dependencies.split(DEPENDENCY_SEPARATOR)));
         }
 
         @Override
