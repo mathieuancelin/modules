@@ -28,14 +28,14 @@ import java.util.zip.ZipFile;
 
 public class Modules {
 
-    public static final boolean failOnCircularRefs = true;
-
     public static final ClassPathModuleImpl CLASSPATH_MODULE = new ClassPathModuleImpl();
 
     // TODO : make it pluggable
     private static final Map<String, Modules> availablePlatforms = new HashMap<String, Modules>();
 
     private Map<Dependency, Module> modules = new HashMap<Dependency, Module>();
+
+    public static boolean failOnCircularRefs = true;
 
     private final String id;
 
@@ -180,6 +180,10 @@ public class Modules {
     public static Configuration getConfigurationFromNonModularJar(final URL jar,
             final String name, final String version) {
         return new ComplexConfigurationFromNonModularJar(jar, version, name);
+    }
+
+    public static void failOnCircularRefs(boolean failOnCircularRefs) {
+        Modules.failOnCircularRefs = failOnCircularRefs;
     }
 
     @Override
