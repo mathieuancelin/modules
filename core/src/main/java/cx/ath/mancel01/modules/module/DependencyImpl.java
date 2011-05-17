@@ -5,16 +5,26 @@ import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.exception.CircularDependencyException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class DependencyImpl implements Dependency {
 
+    private static final Map<String, Dependency> existing = new HashMap<String, Dependency>();
     private final String identifier;
     private final String name;
     private final String version;
 
-    public DependencyImpl(String identifier) {
+    public static synchronized Dependency getFromId(final String identifier) {
+        if (!existing.containsKey(identifier)) {
+            existing.put(identifier, new DependencyImpl(identifier));
+        }
+        return existing.get(identifier);
+    }
+
+    private DependencyImpl(String identifier) {
         this.identifier = identifier;
         String tmpName = "";
         String tmpVersion = "";
@@ -43,10 +53,32 @@ public class DependencyImpl implements Dependency {
         return identifier;
     }
 
-    static Collection<Dependency> getDependencies(Collection<String> dependencies) {
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DependencyImpl other = (DependencyImpl) obj;
+        if ((this.identifier == null) ? (other.identifier != null) : !this.identifier.equals(other.identifier)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 53 * hash + (this.identifier != null ? this.identifier.hashCode() : 0);
+        return hash;
+    }
+
+    public static Collection<Dependency> getDependencies(Collection<String> dependencies) {
         List<Dependency> deps = new ArrayList<Dependency>();
         for (final String dep : dependencies) {
-            deps.add(new DependencyImpl(dep));
+            deps.add(getFromId(dep));
         }
         return deps;
     }
@@ -81,7 +113,7 @@ public class DependencyImpl implements Dependency {
         } else {
             marked.add(m.identifier);
             for (Dependency dependency : m.dependencies()) {
-                Module child = modules.getModules().get(dependency.identifier());
+                Module child = modules.getModules().get(dependency);
                 if (child != null) {
                     checkForCircularDependencies(marked, child, modules, areCircular);
                 }

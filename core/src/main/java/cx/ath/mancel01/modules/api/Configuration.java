@@ -11,9 +11,9 @@ public interface Configuration {
 
     String identifier();
 
-    Collection<String> dependencies();
+    Collection<Dependency> dependencies();
 
-    Collection<String> optionalDependencies();
+    Collection<Dependency> optionalDependencies();
 
     boolean startable();
 

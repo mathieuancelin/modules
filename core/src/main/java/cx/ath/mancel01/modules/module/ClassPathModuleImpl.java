@@ -1,6 +1,7 @@
 package cx.ath.mancel01.modules.module;
 
 import cx.ath.mancel01.modules.api.Configuration;
+import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.exception.MissingDependenciesException;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.lang.reflect.Method;
@@ -42,11 +43,14 @@ public class ClassPathModuleImpl extends Module {
 
         static {
             try {
-                findLoadedClass = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+                findLoadedClass = ClassLoader.class
+                        .getDeclaredMethod("findLoadedClass", String.class);
             } catch (NoSuchMethodException ex) {
-                throw new RuntimeException("Can't find method 'findLoadedClass'");
+                throw new RuntimeException(
+                        "Can't find method 'findLoadedClass' because NoSuchMethod exists", ex);
             } catch (SecurityException ex) {
-                throw new RuntimeException("Can't find method 'findLoadedClass'");
+                throw new RuntimeException(
+                        "Can't find method 'findLoadedClass' because of SecurityException", ex);
             }
         }
         private Module module;
@@ -82,12 +86,12 @@ public class ClassPathModuleImpl extends Module {
         }
 
         @Override
-        public Collection<String> dependencies() {
+        public Collection<Dependency> dependencies() {
             return Collections.emptyList();
         }
 
         @Override
-        public Collection<String> optionalDependencies() {
+        public Collection<Dependency> optionalDependencies() {
             return Collections.emptyList();
         }
 

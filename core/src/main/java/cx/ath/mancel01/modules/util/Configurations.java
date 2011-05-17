@@ -1,6 +1,8 @@
 package cx.ath.mancel01.modules.util;
 
 import cx.ath.mancel01.modules.api.Configuration;
+import cx.ath.mancel01.modules.api.Dependency;
+import cx.ath.mancel01.modules.module.DependencyImpl;
 import cx.ath.mancel01.modules.module.Module;
 import java.io.File;
 import java.net.URL;
@@ -32,15 +34,15 @@ public class Configurations {
         }
 
         @Override
-        public Collection<String> dependencies() {
+        public Collection<Dependency> dependencies() {
             if (dependencies == null) {
                 return Collections.emptyList();
             }
-            return Arrays.asList(dependencies.split(";"));
+            return DependencyImpl.getDependencies(Arrays.asList(dependencies.split(";")));
         }
 
         @Override
-        public Collection<String> optionalDependencies() {
+        public Collection<Dependency> optionalDependencies() {
             return Collections.emptyList();
         }
 
@@ -101,12 +103,12 @@ public class Configurations {
         }
 
         @Override
-        public Collection<String> dependencies() {
+        public Collection<Dependency> dependencies() {
             return Collections.emptyList();
         }
 
         @Override
-        public Collection<String> optionalDependencies() {
+        public Collection<Dependency> optionalDependencies() {
             return Collections.emptyList();
         }
 
@@ -152,12 +154,12 @@ public class Configurations {
         }
 
         @Override
-        public Collection<String> dependencies() {
+        public Collection<Dependency> dependencies() {
             return Collections.emptyList();
         }
 
         @Override
-        public Collection<String> optionalDependencies() {
+        public Collection<Dependency> optionalDependencies() {
             return Collections.emptyList();
         }
 

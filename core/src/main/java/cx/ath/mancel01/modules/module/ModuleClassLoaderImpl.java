@@ -106,8 +106,8 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         } catch (Throwable t) {
             err = true;
             for (Dependency dependency : module.dependencies()) {
-            if (module.delegateModules().getModules().containsKey(dependency.identifier())) {
-                Module dep = module.delegateModules().getModules().get(dependency.identifier());
+            if (module.delegateModules().getModules().containsKey(dependency)) {
+                Module dep = module.delegateModules().getModules().get(dependency);
                     if (dep.canLoad(name)) {
                         SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
                         return dep.load(name);

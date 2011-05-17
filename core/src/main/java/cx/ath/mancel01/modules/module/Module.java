@@ -40,8 +40,7 @@ public class Module {
         this.identifier = configuration.name() + VERSION_SEPARATOR + configuration.version();
         this.name = configuration.name();
         this.version = configuration.version();
-        this.dependencies = DependencyImpl
-                .getDependencies(configuration.dependencies());
+        this.dependencies = configuration.dependencies();
         this.configuration = configuration;
         this.delegateModules = modules;
         this.areCircular = new HashSet<String>();
@@ -89,7 +88,7 @@ public class Module {
     public void validate() {
         List<String> missing = new ArrayList<String>();
         for (Dependency dependency : dependencies) {
-            if (!delegateModules.getModules().containsKey(dependency.identifier())) {
+            if (!delegateModules.getModules().containsKey(dependency)) {
                 missing.add("Missing dependency : " + dependency.identifier());
             }
         }

@@ -2,9 +2,11 @@ package cx.ath.mancel01.modules;
 
 import cx.ath.mancel01.modules.module.ClassPathModuleImpl;
 import cx.ath.mancel01.modules.api.Configuration;
+import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.exception.AddModuleException;
 import cx.ath.mancel01.modules.exception.ModuleNotFoundException;
 import cx.ath.mancel01.modules.exception.ModuleNotReadableException;
+import cx.ath.mancel01.modules.module.DependencyImpl;
 import cx.ath.mancel01.modules.module.Module;
 import cx.ath.mancel01.modules.util.Configurations.ComplexConfigurationFromNonModularJar;
 import cx.ath.mancel01.modules.util.Configurations.SimpleConfigurationFromNonModularJar;
@@ -33,7 +35,7 @@ public class Modules {
     // TODO : make it pluggable
     private static final Map<String, Modules> availablePlatforms = new HashMap<String, Modules>();
 
-    private Map<String, Module> modules = new HashMap<String, Module>();
+    private Map<Dependency, Module> modules = new HashMap<Dependency, Module>();
 
     private final String id;
 
@@ -46,7 +48,7 @@ public class Modules {
     public void addModule(final Configuration configuration) {
         Module module = new Module(configuration, this);
         module.validate();
-        modules.put(module.identifier, module);
+        modules.put(DependencyImpl.getFromId(module.identifier), module);
     }
 
     public void addModules(final Collection<Configuration> configurations) {
@@ -58,7 +60,7 @@ public class Modules {
         for (Configuration configuration : configurations) {
             Module module = new Module(configuration, this);
             newModules.add(module);
-            modules.put(module.identifier, module);
+            modules.put(DependencyImpl.getFromId(module.identifier), module);
         }
         try {
             for (Module module : newModules) {
@@ -66,23 +68,23 @@ public class Modules {
             }
         } catch (Exception ex) {
             for (Module module : newModules) {
-                modules.remove(module.identifier);
+                modules.remove(DependencyImpl.getFromId(module.identifier));
             }
             throw new AddModuleException(ex);
         }
     }
 
     public void removeModule(final String identifier) {
-        if (modules.containsKey(identifier)) {
-            modules.remove(identifier);
+        if (modules.containsKey(DependencyImpl.getFromId(identifier))) {
+            modules.remove(DependencyImpl.getFromId(identifier));
         } else {
             throw new ModuleNotFoundException("Module " + identifier + " not found");
         }
     }
 
     public Module getModule(final String identifier) {
-        if (modules.containsKey(identifier)) {
-            return modules.get(identifier);
+        if (modules.containsKey(DependencyImpl.getFromId(identifier))) {
+            return modules.get(DependencyImpl.getFromId(identifier));
         } else {
             throw new ModuleNotFoundException("Module " + identifier + " not found");
         }
@@ -93,14 +95,14 @@ public class Modules {
     }
 
     public void startModule(String identifier) {
-        if (modules.containsKey(identifier)) {
-            modules.get(identifier).start();
+        if (modules.containsKey(DependencyImpl.getFromId(identifier))) {
+            modules.get(DependencyImpl.getFromId(identifier)).start();
         } else {
             throw new ModuleNotFoundException("Module " + identifier + " not found");
         }
     }
 
-    public Map<String, Module> getModules() {
+    public Map<Dependency, Module> getModules() {
         return modules;
     }
 
