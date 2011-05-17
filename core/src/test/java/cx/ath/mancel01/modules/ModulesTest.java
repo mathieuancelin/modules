@@ -39,7 +39,7 @@ public class ModulesTest {
         modules.startModule("com.sample.module2:1.0");
     }
 
-    @Test
+    //@Test
     public void testModulesM2Scanning() throws Exception {
         SimpleModuleLogger.info("\nStart M2 scan ... \n");
         long start = System.currentTimeMillis();
