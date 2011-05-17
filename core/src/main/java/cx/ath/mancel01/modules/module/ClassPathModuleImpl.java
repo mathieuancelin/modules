@@ -91,11 +91,6 @@ public class ClassPathModuleImpl extends Module {
         }
 
         @Override
-        public Collection<Dependency> optionalDependencies() {
-            return Collections.emptyList();
-        }
-
-        @Override
         public boolean startable() {
             return false;
         }

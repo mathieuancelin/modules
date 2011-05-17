@@ -20,7 +20,8 @@ public class Configurations {
         private final String dependencies;
         private final URL jar;
 
-        public StandardModuleConfiguration(String name, String version, String mainClass, String dependencies, URL jar) {
+        public StandardModuleConfiguration(String name, String version, 
+                String mainClass, String dependencies, URL jar) {
             this.name = name;
             this.version = version;
             this.mainClass = mainClass;
@@ -39,11 +40,6 @@ public class Configurations {
                 return Collections.emptyList();
             }
             return DependencyImpl.getDependencies(Arrays.asList(dependencies.split(";")));
-        }
-
-        @Override
-        public Collection<Dependency> optionalDependencies() {
-            return Collections.emptyList();
         }
 
         @Override
@@ -108,11 +104,6 @@ public class Configurations {
         }
 
         @Override
-        public Collection<Dependency> optionalDependencies() {
-            return Collections.emptyList();
-        }
-
-        @Override
         public boolean startable() {
             return false;
         }
@@ -155,11 +146,6 @@ public class Configurations {
 
         @Override
         public Collection<Dependency> dependencies() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public Collection<Dependency> optionalDependencies() {
             return Collections.emptyList();
         }
 

@@ -13,8 +13,6 @@ public interface Configuration {
 
     Collection<Dependency> dependencies();
 
-    Collection<Dependency> optionalDependencies();
-
     boolean startable();
 
     String mainClass();
