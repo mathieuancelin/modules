@@ -125,6 +125,14 @@ public class Module {
         return configuration;
     }
 
+    ModuleClassLoaderImpl getModuleClassloader() {
+        return moduleClassloader;
+    }
+
+    public void computeDependencies() {
+        moduleClassloader.computeDependencies();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {

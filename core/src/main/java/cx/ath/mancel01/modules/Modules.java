@@ -52,6 +52,7 @@ public class Modules {
     public void addModule(final Configuration configuration) {
         Module module = new Module(configuration, this);
         module.validate();
+        module.computeDependencies();
         modules.put(DependencyImpl.getFromId(module.identifier), module);
     }
 
@@ -69,6 +70,7 @@ public class Modules {
         try {
             for (Module module : newModules) {
                 module.validate();
+                module.computeDependencies();
             }
         } catch (Exception ex) {
             for (Module module : newModules) {

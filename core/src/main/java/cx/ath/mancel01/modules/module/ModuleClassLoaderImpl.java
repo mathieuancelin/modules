@@ -15,11 +15,7 @@ import cx.ath.mancel01.modules.exception.ModuleClassloaderCreationException;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
 import java.io.File;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -31,8 +27,8 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
 
     private final List<String> managedClasses;
 
-    private final Set<String> dependenciesManagedClasses;
-    
+    private final Map<String, ModuleClassLoaderImpl> dependenciesManagedClasses;
+
     private final List<Resource> managedResources;
 
     static {
@@ -49,7 +45,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         super(urls, Modules.CLASSPATH_MODULE.getLoader());
         this.module = from;
         managedClasses = new ArrayList<String>();
-        dependenciesManagedClasses = new HashSet<String>();
+        dependenciesManagedClasses = new HashMap<String, ModuleClassLoaderImpl>();
         managedResources = new ArrayList<Resource>();
         final URL root = module.configuration().rootResource();
         String fileName = root.getFile();
@@ -95,47 +91,61 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         long start = System.nanoTime();
-        boolean err = false;
-        boolean already = false;
+        boolean dontShow = false;
         Class<?> loadedClass = findLoadedClass(name);
         if (loadedClass != null) {
-            already = true;
+            dontShow = true;
             return loadedClass;
         }
         for (String pack : bootDelegationList) {
             if (name.startsWith(pack)) {
-                SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
-                    name, Modules.CLASSPATH_MODULE.identifier,
-                        new SimpleModuleLogger.Duration(start, System.nanoTime()));
+                SimpleModuleLogger.trace("Delegating {} to {}",
+                    name, Modules.CLASSPATH_MODULE.identifier);
                 return Modules.CLASSPATH_MODULE.load(name);
             }
         }
         try {
-            return super.loadClass(name);
+            if (managedClasses.contains(name)) {
+                return super.loadClass(name);
+            } else {
+                dontShow = true;
+                return delegate(name);
+            }
         } catch (Throwable t) {
-            err = true;
-            return delegate(name, start);
+            dontShow = true;
+            return delegate(name);
         } finally {
-            if (!err && !already) {
+            if (!dontShow) {
                 SimpleModuleLogger.trace("Loading {} from {} in {} ms", name,
                     module.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
             }
         }
     }
 
-    private Class<?> delegate(String name, long start) {
-        for (Dependency dependency : module.dependencies()) {
-            if (module.delegateModules().getModules().containsKey(dependency)) {
-                Module dep = module.delegateModules().getModules().get(dependency);
-                if (dep.canLoad(name)) {
-                    SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
-                        name, dep.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
-                    return dep.load(name);
-                }
+    private Class<?> delegate(String name) throws ClassNotFoundException {
+        try {
+            if (dependenciesManagedClasses.containsKey(name)) {
+                ModuleClassLoaderImpl dep = dependenciesManagedClasses.get(name);
+                SimpleModuleLogger.trace("Delegating {} to {}",
+                    name, dep.module.identifier);
+                return dep.loadClass(name);
             }
+            throw new MissingDependenciesException("Missing dependency for class "
+                + name + " from module " + module.identifier);
+        } catch (Throwable t) {
+            throw new MissingDependenciesException("Missing dependency for class "
+                + name + " from module " + module.identifier);
         }
-        throw new MissingDependenciesException("Missing dependency for class "
-            + name + " from module " + module.identifier);
+//        for (Dependency dependency : module.dependencies()) {
+//            if (module.delegateModules().getModules().containsKey(dependency)) {
+//                Module dep = module.delegateModules().getModules().get(dependency);
+//                if (dep.canLoad(name)) {
+//                    SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
+//                        name, dep.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
+//                    return dep.load(name);
+//                }
+//            }
+//        }
     }
 
     public boolean canLoad(String name) {
@@ -145,16 +155,20 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             }
         }
         if (dependenciesManagedClasses.isEmpty()) {
-            Set<String> visited = new HashSet<String>();
-            visited.add(module.identifier);
-            computeDependenciesLoadable(visited);
+            computeDependencies(); // should be already computed at install time
         }
-        for (String className : dependenciesManagedClasses) {
+        for (String className : dependenciesManagedClasses.keySet()) { // TODO : manage exports
             if (className.equals(name)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public void computeDependencies() {
+        Set<String> visited = new HashSet<String>();
+        visited.add(module.identifier);
+        computeDependenciesLoadable(visited);
     }
 
     List<String> getManagedClasses() {
@@ -200,7 +214,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         }
         List<String> classes = new ArrayList<String>();
         classes.addAll(managedClasses);
-        classes.addAll(dependenciesManagedClasses);
+        classes.addAll(dependenciesManagedClasses.keySet());
         return classes;
     }
 
@@ -209,7 +223,9 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             Module m = module.delegateModules().getModule(dep.identifier());
             if (!visited.contains(dep.identifier())) {
                 visited.add(dep.identifier());
-                dependenciesManagedClasses.addAll(m.getAllLoadableClasses(visited));
+                for (String clazz : m.getAllLoadableClasses(visited)) {
+                    dependenciesManagedClasses.put(clazz, m.getModuleClassloader());
+                }
             }
         }
     }
