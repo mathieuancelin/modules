@@ -95,43 +95,47 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         long start = System.nanoTime();
+        boolean err = false;
+        boolean already = false;
+        Class<?> loadedClass = findLoadedClass(name);
+        if (loadedClass != null) {
+            already = true;
+            return loadedClass;
+        }
         for (String pack : bootDelegationList) {
             if (name.startsWith(pack)) {
                 SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
-                        name, Modules.CLASSPATH_MODULE.identifier,
+                    name, Modules.CLASSPATH_MODULE.identifier,
                         new SimpleModuleLogger.Duration(start, System.nanoTime()));
                 return Modules.CLASSPATH_MODULE.load(name);
             }
         }
-        boolean err = false;
-        boolean already = false;
         try {
-            Class<?> clazz = findLoadedClass(name);
-            if (clazz != null) {
-                already = true;
-                return clazz;
-            }
             return super.loadClass(name);
         } catch (Throwable t) {
             err = true;
-            for (Dependency dependency : module.dependencies()) {
-            if (module.delegateModules().getModules().containsKey(dependency)) {
-                Module dep = module.delegateModules().getModules().get(dependency);
-                    if (dep.canLoad(name)) {
-                        SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
-                                name, dep.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
-                        return dep.load(name);
-                    }
-                }
-            }
-            throw new MissingDependenciesException("Missing dependency for class "
-                    + name + " from module " + module.identifier);
+            return delegate(name, start);
         } finally {
             if (!err && !already) {
                 SimpleModuleLogger.trace("Loading {} from {} in {} ms", name,
-                        module.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
+                    module.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
             }
         }
+    }
+
+    private Class<?> delegate(String name, long start) {
+        for (Dependency dependency : module.dependencies()) {
+            if (module.delegateModules().getModules().containsKey(dependency)) {
+                Module dep = module.delegateModules().getModules().get(dependency);
+                if (dep.canLoad(name)) {
+                    SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
+                        name, dep.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
+                    return dep.load(name);
+                }
+            }
+        }
+        throw new MissingDependenciesException("Missing dependency for class "
+            + name + " from module " + module.identifier);
     }
 
     public boolean canLoad(String name) {
