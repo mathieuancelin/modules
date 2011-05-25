@@ -4,6 +4,8 @@ import cx.ath.mancel01.modules.api.Configuration;
 import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.exception.MissingDependenciesException;
 import cx.ath.mancel01.modules.util.SimpleModuleLogger;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.Collection;
@@ -50,12 +52,21 @@ public class ClassPathModuleImpl extends Module {
             try {
                 findLoadedClass = ClassLoader.class
                         .getDeclaredMethod("findLoadedClass", String.class);
+                Object[] args = new Object[1];
+                args[0] = "java.lang.Object";
+                findLoadedClass.setAccessible(true);
+                findLoadedClass.invoke(CPClassLoader.class.getClassLoader(), args);
+                findLoadedClass.setAccessible(false);
             } catch (NoSuchMethodException ex) {
                 throw new RuntimeException(
                         "Can't find method 'findLoadedClass' because NoSuchMethod exists", ex);
             } catch (SecurityException ex) {
                 throw new RuntimeException(
                         "Can't find method 'findLoadedClass' because of SecurityException", ex);
+            } catch (InvocationTargetException e) {
+                findLoadedClass.setAccessible(false);
+            } catch (IllegalAccessException e) {
+                findLoadedClass.setAccessible(false);
             }
         }
         private Module module;
@@ -67,6 +78,7 @@ public class ClassPathModuleImpl extends Module {
 
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
+            long start = System.nanoTime();
             try {
                 Object[] args = new Object[1];
                 args[0] = name;
@@ -78,7 +90,8 @@ public class ClassPathModuleImpl extends Module {
                 }
             } catch (Exception ex) {
             }
-            SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
+            SimpleModuleLogger.trace("Loading {} from {} in {} ms", name,
+                module.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
             return getParent().loadClass(name);
         }
     }
