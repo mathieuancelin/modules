@@ -22,8 +22,8 @@ public class SimpleModuleLogger {
     private static final String ERROR_COLOUR = PREFIX + NORMAL + SEPARATOR + FOREGROUND_RED + SUFFIX;
     private static final String WARN_COLOUR = PREFIX + NORMAL + SEPARATOR + FOREGROUND_YELLOW + SUFFIX;
     private static final String INFO_COLOUR = PREFIX + SUFFIX;
-    private static final String DEBUG_COLOUR = PREFIX + NORMAL + SEPARATOR + FOREGROUND_CYAN + SUFFIX;
-    private static final String TRACE_COLOUR = PREFIX + NORMAL + SEPARATOR + FOREGROUND_BLUE + SUFFIX;
+    private static final String DEBUG_COLOUR = PREFIX + NORMAL + SEPARATOR + FOREGROUND_BLUE + SUFFIX;
+    private static final String TRACE_COLOUR = PREFIX + NORMAL + SEPARATOR + FOREGROUND_CYAN + SUFFIX;
     private static final String TRACE_PREFIX = "[TRACE] ";
 
     private static boolean trace = false;
@@ -86,5 +86,30 @@ public class SimpleModuleLogger {
             print.append(END_COLOUR);
         }
         out.println(print.toString());
+    }
+
+    public static class Duration {
+
+        private final long start;
+        private final long stop;
+
+        private double divide = 1000000.0;
+
+        public Duration(long start, long stop) {
+            this.start = start;
+            this.stop = stop;
+        }
+
+        public Duration(long start, long stop, double divide) {
+            this.start = start;
+            this.stop = stop;
+            this.divide = divide;
+        }
+
+        @Override
+        public String toString() {
+            double time =  (stop - start);
+            return String.format("%.3f", time / divide);
+        }
     }
 }
