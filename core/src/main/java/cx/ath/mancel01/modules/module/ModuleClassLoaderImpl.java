@@ -94,9 +94,12 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
 
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
+        long start = System.nanoTime();
         for (String pack : bootDelegationList) {
             if (name.startsWith(pack)) {
-                SimpleModuleLogger.trace("Delegating {} to {}", name, Modules.CLASSPATH_MODULE.identifier);
+                SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
+                        name, Modules.CLASSPATH_MODULE.identifier,
+                        new SimpleModuleLogger.Duration(start, System.nanoTime()));
                 return Modules.CLASSPATH_MODULE.load(name);
             }
         }
@@ -115,7 +118,8 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
             if (module.delegateModules().getModules().containsKey(dependency)) {
                 Module dep = module.delegateModules().getModules().get(dependency);
                     if (dep.canLoad(name)) {
-                        SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
+                        SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
+                                name, dep.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
                         return dep.load(name);
                     }
                 }
@@ -124,7 +128,8 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
                     + name + " from module " + module.identifier);
         } finally {
             if (!err && !already) {
-                SimpleModuleLogger.trace("Loading {} from {}", name, module.identifier);
+                SimpleModuleLogger.trace("Loading {} from {} in {} ms", name,
+                        module.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
             }
         }
     }
