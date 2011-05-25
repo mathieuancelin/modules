@@ -123,29 +123,31 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     }
 
     private Class<?> delegate(String name) throws ClassNotFoundException {
-        try {
-            if (dependenciesManagedClasses.containsKey(name)) {
-                ModuleClassLoaderImpl dep = dependenciesManagedClasses.get(name);
-                SimpleModuleLogger.trace("Delegating {} to {}",
-                    name, dep.module.identifier);
-                return dep.loadClass(name);
-            }
-            throw new MissingDependenciesException("Missing dependency for class "
-                + name + " from module " + module.identifier);
-        } catch (Throwable t) {
-            throw new MissingDependenciesException("Missing dependency for class "
-                + name + " from module " + module.identifier);
-        }
-//        for (Dependency dependency : module.dependencies()) {
-//            if (module.delegateModules().getModules().containsKey(dependency)) {
-//                Module dep = module.delegateModules().getModules().get(dependency);
-//                if (dep.canLoad(name)) {
-//                    SimpleModuleLogger.trace("Delegating {} to {} in {} ms",
-//                        name, dep.identifier, new SimpleModuleLogger.Duration(start, System.nanoTime()));
-//                    return dep.load(name);
-//                }
+//        try {
+//            if (dependenciesManagedClasses.containsKey(name)) {
+//                ModuleClassLoaderImpl dep = dependenciesManagedClasses.get(name);
+//                SimpleModuleLogger.trace("Delegating {} to {}",
+//                    name, dep.module.identifier);
+//                return dep.loadClass(name);
 //            }
+//            throw new MissingDependenciesException("Missing dependency for class "
+//                + name + " from module " + module.identifier);
+//        } catch (Throwable t) {
+//            throw new MissingDependenciesException("Missing dependency for class "
+//                + name + " from module " + module.identifier);
 //        }
+        for (Dependency dependency : module.dependencies()) {
+            Map<Dependency, Module> modules = module.delegateModules().getModules();
+            if (modules.containsKey(dependency)) {
+                Module dep = modules.get(dependency);
+                if (dep.canLoad(name)) {
+                    SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
+                    return dep.load(name);
+                }
+            }
+        }
+        throw new MissingDependenciesException("Missing dependency for class "
+                + name + " from module " + module.identifier);
     }
 
     public boolean canLoad(String name) {
