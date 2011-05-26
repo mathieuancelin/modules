@@ -128,8 +128,8 @@ public class ModulesTest {
         Assert.assertNotNull(module1.getResource("META-INF/configuration.properties"));
         Assert.assertNotNull(module1.getResourceAsStream("META-INF/configuration.properties"));
         Assert.assertEquals(4, Collections.list(module2.getResources("META-INF/configuration.properties")).size());
-        Assert.assertEquals(2, module1.getAllLoadableClasses().size());
-        Assert.assertEquals(4, module2.getAllLoadableClasses().size());
-        Assert.assertEquals(3, module3.getAllLoadableClasses().size());
+        Assert.assertEquals(2, module1.getAllManagedClasses().size());
+        Assert.assertEquals(4, module2.getAllManagedClasses().size());
+        Assert.assertEquals(3, module3.getAllManagedClasses().size());
     }
 }

@@ -31,6 +31,7 @@ public class Module {
     public final String version;
 
     private final Collection<Dependency> dependencies;
+    private final List<String> allTransitiveManagedClasses;
     private final Modules delegateModules;
     private final Configuration configuration;
 
@@ -46,6 +47,7 @@ public class Module {
         this.configuration = configuration;
         this.delegateModules = modules;
         this.areCircular = new HashSet<String>();
+        this.allTransitiveManagedClasses = new ArrayList<String>();
         if (configuration.rootResource() != null) {
             this.moduleClassloader = 
                 new ModuleClassLoaderImpl(
@@ -83,14 +85,6 @@ public class Module {
         }
     }
 
-    public boolean canLoad(String name) {
-        return moduleClassloader.canLoad(name);
-    }
-
-    public Collection<Dependency> dependencies() {
-        return dependencies;
-    }
-
     public void validate() {
         List<String> missing = new ArrayList<String>();
         for (Dependency dependency : dependencies) {
@@ -111,49 +105,6 @@ public class Module {
         DependencyImpl
             .checkForCircularDependencies(
                 marked, this, delegateModules, areCircular);
-    }
-
-    public <T> ServiceLoader<T> load(Class<T> clazz) {
-        return ServiceLoader.load(clazz, moduleClassloader);
-    }
-
-    Modules delegateModules() {
-        return delegateModules;
-    }
-
-    Configuration configuration() {
-        return configuration;
-    }
-
-    ModuleClassLoaderImpl getModuleClassloader() {
-        return moduleClassloader;
-    }
-
-    public void computeDependencies() {
-        moduleClassloader.computeDependencies();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Module other = (Module) obj;
-        if ((this.identifier == null) ? (other.identifier != null)
-                : !this.identifier.equals(other.identifier)) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 97 * hash + (this.identifier != null ? this.identifier.hashCode() : 0);
-        return hash;
     }
 
     public Enumeration<URL> getResources(String name) throws IOException {
@@ -210,18 +161,111 @@ public class Module {
         }
     }
 
-    public List<String> getAllLoadableClasses() {
+    public List<String> getAllManagedClasses() {
         Set<String> visited = new HashSet<String>();
         visited.add(identifier);
-        return getAllLoadableClasses(visited);
+        return getAllTransitiveManagedClasses(visited);
     }
 
-    List<String> getAllLoadableClasses(Set<String> visited) {
-        return moduleClassloader.getAllManagedClasses(visited);
+    public void computeDependencies() {
+        Set<String> visited = new HashSet<String>();
+        visited.add(this.identifier);
+        // compute transitive dependencies
+        computeTransitiveManagedClasses(visited);
+        // compute direct dependencies
+        computeDirectManagedClasses();
     }
 
-    List<String> getManagedClasses() {
+    public boolean canLoad(String name) {
+        return moduleClassloader.canLoad(name);
+    }
+
+    public Collection<Dependency> dependencies() {
+        return dependencies;
+    }
+
+    public <T> ServiceLoader<T> load(Class<T> clazz) {
+        return ServiceLoader.load(clazz, moduleClassloader);
+    }
+
+    public Configuration configuration() {
+        return configuration;
+    }
+
+    private Modules delegateModules() {
+        return delegateModules;
+    }
+
+    private ModuleClassLoaderImpl getModuleClassloader() {
+        return moduleClassloader;
+    }
+
+    private List<String> getManagedClasses() {
         return moduleClassloader.getManagedClasses();
+    }
+
+    private void computeDirectManagedClasses() {
+        for (Dependency dep : this.dependencies()) {
+            Module m = this.delegateModules().getModule(dep.identifier());
+            for (String clazz : m.getManagedClasses()) {
+                moduleClassloader.getDirectDependenciesManagedClasses()
+                    .put(clazz, m.getModuleClassloader());
+            }
+        }
+    }
+
+    private List<String> getAllTransitiveManagedClasses(Set<String> visited) {
+        // assuming dependencies are already computed
+        if (depsHasChanged()) {
+            allTransitiveManagedClasses.clear();
+            allTransitiveManagedClasses.addAll(moduleClassloader.getManagedClasses());
+            allTransitiveManagedClasses.addAll(moduleClassloader
+                    .getDependenciesManagedClasses().keySet());
+        }
+        return allTransitiveManagedClasses;
+    }
+
+    private boolean depsHasChanged() {
+        int cache = allTransitiveManagedClasses.size();
+        int direct = moduleClassloader.getManagedClasses().size();
+        int deps = moduleClassloader.getDependenciesManagedClasses().size();
+        return (cache != (direct + deps));
+    }
+
+    private void computeTransitiveManagedClasses(Set<String> visited) {
+        for (Dependency dep : this.dependencies()) {
+            Module m = this.delegateModules().getModule(dep.identifier());
+            if (!visited.contains(dep.identifier())) {
+                visited.add(dep.identifier());
+                for (String clazz : m.getAllTransitiveManagedClasses(visited)) {
+                    moduleClassloader.getDependenciesManagedClasses()
+                            .put(clazz, m.getModuleClassloader());
+                }
+            }
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Module other = (Module) obj;
+        if ((this.identifier == null) ? (other.identifier != null)
+                : !this.identifier.equals(other.identifier)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 97 * hash + (this.identifier != null ? this.identifier.hashCode() : 0);
+        return hash;
     }
 
     public static String getIdentifier(String name, String version) {

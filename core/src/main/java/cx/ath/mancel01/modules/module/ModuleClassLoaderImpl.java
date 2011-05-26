@@ -159,31 +159,12 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
                 return true;
             }
         }
-        if (dependenciesManagedClasses.isEmpty()) {
-            computeDependencies(); // should be already computed at install time
-        }
         for (String className : dependenciesManagedClasses.keySet()) { // TODO : manage exports
             if (className.equals(name)) {
                 return true;
             }
         }
         return false;
-    }
-
-    public void computeDependencies() {
-        Set<String> visited = new HashSet<String>();
-        visited.add(module.identifier);
-        computeDependenciesLoadable(visited);
-        for (Dependency dep : module.dependencies()) {
-            Module m = module.delegateModules().getModule(dep.identifier());
-            for (String clazz : m.getManagedClasses()) {
-                directDependenciesManagedClasses.put(clazz, m.getModuleClassloader());
-            }
-        }
-    }
-
-    List<String> getManagedClasses() {
-        return managedClasses;
     }
 
     @Override
@@ -206,6 +187,10 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         return module.getResources(name);
     }
 
+    List<String> getManagedClasses() {
+        return managedClasses;
+    }
+
     URL getJarResource(String name) {
         return super.getResource(name);
     }
@@ -218,26 +203,15 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         return super.getResources(name);
     }
 
-    List<String> getAllManagedClasses(Set<String> visited) {
-        if (dependenciesManagedClasses.isEmpty()) {
-            visited.add(module.identifier);
-            computeDependenciesLoadable(visited);
-        }
-        List<String> classes = new ArrayList<String>();
-        classes.addAll(managedClasses);
-        classes.addAll(dependenciesManagedClasses.keySet());
-        return classes;
+    Map<String, ModuleClassLoaderImpl> getDependenciesManagedClasses() {
+        return dependenciesManagedClasses;
     }
 
-    private void computeDependenciesLoadable(Set<String> visited) {
-        for (Dependency dep : module.dependencies()) {
-            Module m = module.delegateModules().getModule(dep.identifier());
-            if (!visited.contains(dep.identifier())) {
-                visited.add(dep.identifier());
-                for (String clazz : m.getAllLoadableClasses(visited)) {
-                    dependenciesManagedClasses.put(clazz, m.getModuleClassloader());
-                }
-            }
-        }
+    Map<String, ModuleClassLoaderImpl> getDirectDependenciesManagedClasses() {
+        return directDependenciesManagedClasses;
+    }
+
+    List<Resource> getManagedResources() {
+        return managedResources;
     }
 }
