@@ -29,6 +29,8 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
 
     private final Map<String, ModuleClassLoaderImpl> dependenciesManagedClasses;
 
+    private final Map<String, ModuleClassLoaderImpl> directDependenciesManagedClasses;
+
     private final List<Resource> managedResources;
 
     static {
@@ -46,6 +48,7 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         this.module = from;
         managedClasses = new ArrayList<String>();
         dependenciesManagedClasses = new HashMap<String, ModuleClassLoaderImpl>();
+        directDependenciesManagedClasses = new HashMap<String, ModuleClassLoaderImpl>();
         managedResources = new ArrayList<Resource>();
         final URL root = module.configuration().rootResource();
         String fileName = root.getFile();
@@ -123,31 +126,31 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
     }
 
     private Class<?> delegate(String name) throws ClassNotFoundException {
-//        try {
-//            if (dependenciesManagedClasses.containsKey(name)) {
-//                ModuleClassLoaderImpl dep = dependenciesManagedClasses.get(name);
-//                SimpleModuleLogger.trace("Delegating {} to {}",
-//                    name, dep.module.identifier);
-//                return dep.loadClass(name);
-//            }
-//            throw new MissingDependenciesException("Missing dependency for class "
-//                + name + " from module " + module.identifier);
-//        } catch (Throwable t) {
-//            throw new MissingDependenciesException("Missing dependency for class "
-//                + name + " from module " + module.identifier);
-//        }
-        for (Dependency dependency : module.dependencies()) {
-            Map<Dependency, Module> modules = module.delegateModules().getModules();
-            if (modules.containsKey(dependency)) {
-                Module dep = modules.get(dependency);
-                if (dep.canLoad(name)) {
-                    SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
-                    return dep.load(name);
-                }
+        try {
+            if (directDependenciesManagedClasses.containsKey(name)) {
+                ModuleClassLoaderImpl dep = directDependenciesManagedClasses.get(name);
+                SimpleModuleLogger.trace("Delegating {} to {}",
+                    name, dep.module.identifier);
+                return dep.loadClass(name);
             }
-        }
-        throw new MissingDependenciesException("Missing dependency for class "
+            throw new MissingDependenciesException("Missing dependency for class "
                 + name + " from module " + module.identifier);
+        } catch (Throwable t) {
+            throw new MissingDependenciesException("Missing dependency for class "
+                + name + " from module " + module.identifier);
+        }
+//        for (Dependency dependency : module.dependencies()) {
+//            Map<Dependency, Module> modules = module.delegateModules().getModules();
+//            if (modules.containsKey(dependency)) {
+//                Module dep = modules.get(dependency);
+//                if (dep.canLoad(name)) {
+//                    SimpleModuleLogger.trace("Delegating {} to {}", name, dep.identifier);
+//                    return dep.load(name);
+//                }
+//            }
+//        }
+//        throw new MissingDependenciesException("Missing dependency for class "
+//                + name + " from module " + module.identifier);
     }
 
     public boolean canLoad(String name) {
@@ -171,6 +174,12 @@ public class ModuleClassLoaderImpl extends URLClassLoader implements ModuleClass
         Set<String> visited = new HashSet<String>();
         visited.add(module.identifier);
         computeDependenciesLoadable(visited);
+        for (Dependency dep : module.dependencies()) {
+            Module m = module.delegateModules().getModule(dep.identifier());
+            for (String clazz : m.getManagedClasses()) {
+                directDependenciesManagedClasses.put(clazz, m.getModuleClassloader());
+            }
+        }
     }
 
     List<String> getManagedClasses() {
