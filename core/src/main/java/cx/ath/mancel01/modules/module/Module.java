@@ -225,6 +225,9 @@ public class Module {
         return allTransitiveManagedClasses;
     }
 
+    /**
+     * Dumb method to know if we need to recalculate transitive dependencies
+     */
     private boolean depsHasChanged() {
         int cache = allTransitiveManagedClasses.size();
         int direct = moduleClassloader.getManagedClasses().size();

@@ -7,7 +7,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import cx.ath.mancel01.modules.Modules;
-import cx.ath.mancel01.modules.api.Dependency;
 import cx.ath.mancel01.modules.api.ModuleClassLoader;
 import cx.ath.mancel01.modules.api.Resource;
 import cx.ath.mancel01.modules.exception.MissingDependenciesException;
